@@ -10,8 +10,40 @@ module AdventOfCode =
     open MF.Utils
 
     [<RequireQualifiedAccess>]
-    module private Day_ =
-        let foo _ = ()
+    module private Day1 =
+        let countDepthIncreses (measurements: string list) =
+            seq {
+                let measurements = measurements |> List.map int
+
+                for current in 1 .. measurements.Length - 1 do
+                    let previous = current - 1
+
+                    if measurements.[current] > measurements.[previous] then
+                        yield 1
+            }
+            |> Seq.sum
+
+        let foo measurements =
+            seq {
+                let measurements = measurements |> List.map int
+
+                for current in 3 .. measurements.Length - 1 do
+                    let previous = List.sum [
+                        measurements.[current - 1]
+                        measurements.[current - 2]
+                        measurements.[current - 3]
+                    ]
+
+                    let current = List.sum [
+                        measurements.[current]
+                        measurements.[current - 1]
+                        measurements.[current - 2]
+                    ]
+
+                    if current > previous then
+                        yield 1
+            }
+            |> Seq.sum
 
     // --- end of days ---
 
@@ -59,15 +91,14 @@ module AdventOfCode =
         }
 
         match day with
-        (* | 1 ->
-            let! day1result =
+        | 1 ->
+            let day1result =
                 if firstPuzzle
-                then inputLines |> Day1.tryFind2MatchingNumbers
-                else inputLines |> Day1.tryFind3MatchingNumbers
-                |> Result.ofOption "There are no numbers in the input which matches a criteria."
+                then inputLines |> Day1.countDepthIncreses
+                else inputLines |> Day1.foo
 
             return! handleResult int day1result
-         *)
+
         | day ->
             return! Error <| sprintf "Day %A is not ready yet." day
     })
