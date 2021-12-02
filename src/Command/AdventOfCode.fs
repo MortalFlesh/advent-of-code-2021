@@ -23,7 +23,7 @@ module AdventOfCode =
             }
             |> Seq.sum
 
-        let foo measurements =
+        let countDepthGroupsIncreases measurements =
             seq {
                 let measurements = measurements |> List.map int
 
@@ -44,6 +44,43 @@ module AdventOfCode =
                         yield 1
             }
             |> Seq.sum
+
+    [<RequireQualifiedAccess>]
+    module private Day2 =
+        type Position = {
+            Horizontal: int
+            Depth: int
+        }
+
+        let calculate (instructions: string list) =
+            instructions
+            |> List.fold (fun acc -> function
+                | Regex @"forward (\d+)" [ value ] -> { acc with Horizontal = acc.Horizontal + (int value) }
+                | Regex @"down (\d+)" [ value ] -> { acc with Depth = acc.Depth + (int value) }
+                | Regex @"up (\d+)" [ value ] -> { acc with Depth = acc.Depth - (int value) }
+                | _ -> acc
+            ) { Horizontal = 0; Depth = 0 }
+            |> fun { Horizontal = h; Depth = d } -> h * d
+
+        type AimedPosition = {
+            Horizontal: int
+            Depth: int
+            Aim: int
+        }
+
+        let calculateAimed (instructions: string list) =
+            instructions
+            |> List.fold (fun (acc: AimedPosition) -> function
+                | Regex @"forward (\d+)" [ value ] -> {
+                    acc with
+                        Horizontal = acc.Horizontal + (int value)
+                        Depth = acc.Depth + acc.Aim * (int value)
+                    }
+                | Regex @"down (\d+)" [ value ] -> { acc with Aim = acc.Aim + (int value) }
+                | Regex @"up (\d+)" [ value ] -> { acc with Aim = acc.Aim - (int value) }
+                | _ -> acc
+            ) { Horizontal = 0; Depth = 0; Aim = 0 }
+            |> fun { Horizontal = h; Depth = d } -> h * d
 
     // --- end of days ---
 
@@ -92,12 +129,20 @@ module AdventOfCode =
 
         match day with
         | 1 ->
-            let day1result =
+            let result =
                 if firstPuzzle
                 then inputLines |> Day1.countDepthIncreses
-                else inputLines |> Day1.foo
+                else inputLines |> Day1.countDepthGroupsIncreases
 
-            return! handleResult int day1result
+            return! handleResult int result
+
+        | 2 ->
+            let result =
+                if firstPuzzle
+                then inputLines |> Day2.calculate
+                else inputLines |> Day2.calculateAimed
+
+            return! handleResult int result
 
         | day ->
             return! Error <| sprintf "Day %A is not ready yet." day
